@@ -218,8 +218,8 @@ public class OwoRoleSelectionScreen extends BaseOwoScreen<FlowLayout> {
         String localPlayerName = Minecraft.getInstance().player != null ? Minecraft.getInstance().player.getName().getString() : "";
         boolean isTakenByMe = isTaken && takenByPlayer.equalsIgnoreCase(localPlayerName);
 
-        // Outer Card Container (width: 175px, height: 250px)
-        FlowLayout card = UIContainers.verticalFlow(Sizing.fixed(175), Sizing.fixed(250));
+        // Outer Card Container (width: 205px, height: 250px)
+        FlowLayout card = UIContainers.verticalFlow(Sizing.fixed(205), Sizing.fixed(250));
 
         // Neon border and dark glass background
         int borderColor = isTaken ? 0xFF2D3436 : colorHex;
@@ -229,7 +229,7 @@ public class OwoRoleSelectionScreen extends BaseOwoScreen<FlowLayout> {
         card.horizontalAlignment(HorizontalAlignment.CENTER);
 
         // 1. Icon Box at the top (with subtle inner border)
-        FlowLayout iconBox = UIContainers.verticalFlow(Sizing.fixed(158), Sizing.fixed(38));
+        FlowLayout iconBox = UIContainers.verticalFlow(Sizing.fixed(188), Sizing.fixed(38));
         iconBox.surface(Surface.flat(0x991B1A30).and(Surface.outline(0xFF2E2D48)));
         iconBox.horizontalAlignment(HorizontalAlignment.CENTER);
         iconBox.verticalAlignment(VerticalAlignment.CENTER);
@@ -252,24 +252,24 @@ public class OwoRoleSelectionScreen extends BaseOwoScreen<FlowLayout> {
                         .margins(Insets.bottom(4))
         );
 
-        // 3. Pros and Cons list (compact and clean)
-        FlowLayout perksLayout = UIContainers.verticalFlow(Sizing.fill(100), Sizing.fixed(78));
+        // 3. Pros and Cons list (compact and clean with wrapping support)
+        FlowLayout perksLayout = UIContainers.verticalFlow(Sizing.fill(100), Sizing.fixed(82));
         perksLayout.horizontalAlignment(HorizontalAlignment.LEFT);
 
         for (String pro : pros) {
-            perksLayout.child(
-                    UIComponents.label(Component.literal("§a" + pro))
-                            .shadow(true)
-                            .margins(Insets.vertical(1))
-            );
+            var label = UIComponents.label(Component.literal("§a" + pro))
+                    .shadow(true)
+                    .maxWidth(188)
+                    .margins(Insets.vertical(1));
+            perksLayout.child(label);
         }
 
         for (String con : cons) {
-            perksLayout.child(
-                    UIComponents.label(Component.literal("§c" + con))
-                            .shadow(true)
-                            .margins(Insets.vertical(1))
-            );
+            var label = UIComponents.label(Component.literal("§c" + con))
+                    .shadow(true)
+                    .maxWidth(188)
+                    .margins(Insets.vertical(1));
+            perksLayout.child(label);
         }
         card.child(perksLayout);
 
