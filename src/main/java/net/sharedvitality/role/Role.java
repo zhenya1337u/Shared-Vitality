@@ -2,16 +2,16 @@ package net.sharedvitality.role;
 
 public enum Role {
     NONE("None", "Нет роли"),
-    GUARDIAN("Guardian", "Страж"),
-    APOTHECARY("Apothecary", "Алхимик / Повар"),
-    DELVER("Delver", "Геолог"),
-    SCOUT("Scout", "Следопыт"),
-    REAPER("Reaper", "Жнец / Берсерк"),
-    ENCHANTER("Enchanter", "Зачарователь / Мистик"),
-    MASON("Mason", "Строитель / Архитектор"),
-    BEASTMASTER("Beastmaster", "Зверолов / Пастух"),
-    SHADOW("Shadow", "Тень / Ассасин"),
-    SOULBINDER("Soulbinder", "Шаман / Врачеватель Душ");
+    GUARDIAN("Guardian", "Танк"),
+    APOTHECARY("Apothecary", "Лекарь"),
+    DELVER("Delver", "Шахтер"),
+    SCOUT("Scout", "Лучник"),
+    REAPER("Reaper", "Берсерк"),
+    ENCHANTER("Enchanter", "Маг"),
+    MASON("Mason", "Строитель"),
+    BEASTMASTER("Beastmaster", "Приручатель"),
+    SHADOW("Shadow", "Ассасин"),
+    SOULBINDER("Soulbinder", "Шаман");
 
     private final String id;
     private final String displayName;

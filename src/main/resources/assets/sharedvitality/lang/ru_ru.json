@@ -1,4 +1,15 @@
 {
   "item.sharedvitality.blood_bandage": "Кровавый бинт",
-  "key.sharedvitality.open_role_menu": "Выбор роли (Кровная связь)"
+  "key.sharedvitality.open_role_menu": "Выбор роли (Кровная связь)",
+  "role.sharedvitality.none": "Нет роли",
+  "role.sharedvitality.guardian": "Танк",
+  "role.sharedvitality.apothecary": "Лекарь",
+  "role.sharedvitality.delver": "Шахтер",
+  "role.sharedvitality.scout": "Лучник",
+  "role.sharedvitality.reaper": "Берсерк",
+  "role.sharedvitality.enchanter": "Маг",
+  "role.sharedvitality.mason": "Строитель",
+  "role.sharedvitality.beastmaster": "Приручатель",
+  "role.sharedvitality.shadow": "Ассасин",
+  "role.sharedvitality.soulbinder": "Шаман"
 }

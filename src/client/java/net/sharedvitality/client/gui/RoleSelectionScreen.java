@@ -21,7 +21,10 @@ public class RoleSelectionScreen extends Screen {
         int buttonHeight = 20;
         int gap = 24;
 
-        Role[] roles = {Role.GUARDIAN, Role.APOTHECARY, Role.DELVER, Role.SCOUT};
+        Role[] roles = {
+                Role.GUARDIAN, Role.APOTHECARY, Role.DELVER, Role.SCOUT,
+                Role.REAPER, Role.ENCHANTER, Role.MASON, Role.BEASTMASTER, Role.SHADOW, Role.SOULBINDER
+        };
         for (int i = 0; i < roles.length; i++) {
             Role role = roles[i];
             int y = startY + i * gap;

@@ -1,4 +1,15 @@
 {
   "item.sharedvitality.blood_bandage": "Blood Bandage",
-  "key.sharedvitality.open_role_menu": "Select Role (Shared Vitality)"
+  "key.sharedvitality.open_role_menu": "Select Role (Shared Vitality)",
+  "role.sharedvitality.none": "None",
+  "role.sharedvitality.guardian": "Tank",
+  "role.sharedvitality.apothecary": "Healer",
+  "role.sharedvitality.delver": "Miner",
+  "role.sharedvitality.scout": "Archer",
+  "role.sharedvitality.reaper": "Berserker",
+  "role.sharedvitality.enchanter": "Mage",
+  "role.sharedvitality.mason": "Builder",
+  "role.sharedvitality.beastmaster": "Tamer",
+  "role.sharedvitality.shadow": "Assassin",
+  "role.sharedvitality.soulbinder": "Shaman"
 }
