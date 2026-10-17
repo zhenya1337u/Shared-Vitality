@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"id": "sharedvitality",
+	"version": "${version}",
+	"name": "Shared Vitality",
+	"description": "Bloodlink mod for Minecraft Fabric 26.2. Shared health pool, roles, tether system and blood bandage.",
+	"authors": [
+		"Evgeniy"
+	],
+	"contact": {},
+	"license": "MIT",
+	"icon": "assets/sharedvitality/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"net.sharedvitality.SharedVitalityMod"
+		],
+		"client": [
+			"net.sharedvitality.client.SharedVitalityClient"
+		]
+	},
+	"mixins": [
+		"sharedvitality.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.19.5",
+		"minecraft": "~26.2",
+		"java": ">=25",
+		"fabric-api": "*",
+		"owo": "*"
+	}
+}

@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    " S ",
+    "SBS",
+    " S "
+  ],
+  "key": {
+    "S": "minecraft:string",
+    "B": "minecraft:slime_ball"
+  },
+  "result": {
+    "id": "sharedvitality:blood_bandage",
+    "count": 2
+  }
+}

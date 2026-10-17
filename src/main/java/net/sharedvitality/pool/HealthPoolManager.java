@@ -1,0 +1,260 @@
+package net.sharedvitality.pool;
+
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.sharedvitality.config.ModConfig;
+import net.sharedvitality.network.SyncPoolPayload;
+import net.sharedvitality.role.Role;
+import net.sharedvitality.role.RoleManager;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+public class HealthPoolManager {
+    private static float currentHp = 20.0f;
+    private static float maxHp = 20.0f;
+    private static boolean initialized = false;
+    private static boolean isDistributingDamage = false;
+    private static boolean gameStarted = false;
+    private static MinecraftServer serverInstance;
+
+    public static void setServer(MinecraftServer server) {
+        serverInstance = server;
+    }
+
+    public static boolean isGameStarted() {
+        return gameStarted;
+    }
+
+    public static void setGameStarted(boolean started) {
+        gameStarted = started;
+        if (started) {
+            initialized = false;
+            if (serverInstance != null) {
+                updatePoolCapacity(serverInstance.getPlayerList().getPlayers());
+                currentHp = maxHp;
+            }
+        }
+        syncAll();
+    }
+
+    public static float getCurrentHp() {
+        return currentHp;
+    }
+
+    public static float getMaxHp() {
+        return maxHp;
+    }
+
+    public static void startGame(MinecraftServer server) {
+        List<ServerPlayer> players = server.getPlayerList().getPlayers();
+        if (players.isEmpty()) return;
+
+        // Shuffle roles randomly among players
+        List<Role> availableRoles = new ArrayList<>(List.of(Role.GUARDIAN, Role.APOTHECARY, Role.DELVER, Role.SCOUT));
+        Collections.shuffle(availableRoles);
+
+        for (int i = 0; i < players.size(); i++) {
+            ServerPlayer player = players.get(i);
+            Role role = (i < availableRoles.size()) ? availableRoles.get(i) : availableRoles.get(i % availableRoles.size());
+            RoleManager.setRole(player.getUUID(), role);
+            RoleManager.applyRoleModifiers(player);
+        }
+
+        setGameStarted(true);
+
+        for (ServerPlayer player : players) {
+            Role role = RoleManager.getRole(player.getUUID());
+            player.connection.send(new net.minecraft.network.protocol.game.ClientboundSoundPacket(
+                    net.minecraft.core.registries.BuiltInRegistries.SOUND_EVENT.wrapAsHolder(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE),
+                    SoundSource.PLAYERS,
+                    player.getX(), player.getY(), player.getZ(),
+                    1.0f, 1.0f, player.getRandom().nextLong()
+            ));
+
+            player.sendSystemMessage(Component.literal("§6========================================"));
+            player.sendSystemMessage(Component.literal("§c⚔ ИГРА «КРОВНАЯ СВЯЗЬ» НАЧАЛАСЬ! ⚔"));
+            player.sendSystemMessage(Component.literal("§aВаша роль: §e" + role.getDisplayName()));
+            player.sendSystemMessage(Component.literal("§7Общий пул здоровья активирован. Держитесь вместе!"));
+            player.sendSystemMessage(Component.literal("§6========================================"));
+        }
+
+        syncAll();
+    }
+
+    public static void updatePoolCapacity(List<ServerPlayer> players) {
+        if (players.isEmpty()) return;
+
+        double baseScaling = ModConfig.get().pool_scaling_per_player;
+        float calculatedMax = (float) (players.size() * baseScaling);
+
+        for (ServerPlayer player : players) {
+            Role role = RoleManager.getRole(player.getUUID());
+            if (role == Role.GUARDIAN) {
+                calculatedMax += 10.0f;
+            } else if (role == Role.SCOUT) {
+                calculatedMax = Math.max(1.0f, calculatedMax - 4.0f);
+            }
+        }
+
+        if (!initialized) {
+            currentHp = calculatedMax;
+            initialized = true;
+        } else if (currentHp > calculatedMax) {
+            currentHp = calculatedMax;
+        }
+        maxHp = calculatedMax;
+    }
+
+    public static void heal(float amount) {
+        if (!gameStarted) return;
+        currentHp = Math.min(maxHp, currentHp + amount);
+        syncAll();
+    }
+
+    public static void onPlayerDamage(ServerPlayer victim, float amount) {
+        if (!gameStarted || isDistributingDamage || serverInstance == null) return;
+
+        List<ServerPlayer> players = serverInstance.getPlayerList().getPlayers();
+        if (players.isEmpty()) return;
+
+        Role victimRole = RoleManager.getRole(victim.getUUID());
+
+        // Guardian absorbs 50% damage if blocking with shield
+        if (victimRole == Role.GUARDIAN && victim.isBlocking()) {
+            amount *= 0.5f;
+        }
+
+        isDistributingDamage = true;
+        try {
+            currentHp = Math.max(0.0f, currentHp - amount);
+
+            for (ServerPlayer player : players) {
+                // Audio heartbeat cue
+                player.connection.send(new net.minecraft.network.protocol.game.ClientboundSoundPacket(
+                        net.minecraft.core.registries.BuiltInRegistries.SOUND_EVENT.wrapAsHolder(SoundEvents.WARDEN_HEARTBEAT),
+                        SoundSource.PLAYERS,
+                        player.getX(), player.getY(), player.getZ(),
+                        0.8f, 1.0f, player.getRandom().nextLong()
+                ));
+
+                if (player != victim) {
+                    player.level().sendParticles(ParticleTypes.DAMAGE_INDICATOR,
+                            player.getX(), player.getY() + 1.0, player.getZ(),
+                            3, 0.2, 0.2, 0.2, 0.05);
+                }
+
+                // Synchronize player entity actual health to proportional value
+                float playerMax = player.getMaxHealth();
+                float ratio = (maxHp > 0) ? (currentHp / maxHp) : 0;
+                float playerHealth = Math.max(1.0f, playerMax * ratio);
+                player.setHealth(playerHealth);
+            }
+
+            if (currentHp <= 0.001f) {
+                handleTeamDownedOrDeath(victim, players);
+            }
+        } finally {
+            isDistributingDamage = false;
+        }
+
+        syncAll();
+    }
+
+    private static void handleTeamDownedOrDeath(ServerPlayer victim, List<ServerPlayer> players) {
+        for (ServerPlayer player : players) {
+            if (player.level() instanceof ServerLevel serverLevel) {
+                serverLevel.sendParticles(ParticleTypes.EXPLOSION_EMITTER,
+                        player.getX(), player.getY() + 1.0, player.getZ(),
+                        1, 0, 0, 0, 0);
+            }
+            player.kill(player.level());
+            player.sendSystemMessage(Component.literal("§c[Кровная связь] Общий пул здоровья команды иссяк!"));
+        }
+        currentHp = maxHp;
+    }
+
+    public static void tick(MinecraftServer server) {
+        if (!gameStarted) return;
+
+        List<ServerPlayer> players = server.getPlayerList().getPlayers();
+        if (players.isEmpty()) return;
+
+        updatePoolCapacity(players);
+
+        // Natural slow regen if not severed
+        int tickCount = server.getTickCount();
+        if (tickCount % 40 == 0 && currentHp < maxHp) {
+            heal(0.5f);
+        }
+
+        // Tether calculation
+        double warnDist = ModConfig.get().tether_distance_warning;
+        double severDist = ModConfig.get().tether_distance_sever;
+
+        ServerPlayer anchor = players.get(0);
+        boolean crossDim = false;
+        double maxDist = 0;
+
+        for (ServerPlayer p : players) {
+            RoleManager.tickRole(p);
+
+            if (p.level().dimension() != anchor.level().dimension()) {
+                crossDim = true;
+            } else {
+                double dist = p.distanceTo(anchor);
+                if (dist > maxDist) {
+                    maxDist = dist;
+                }
+            }
+        }
+
+        int warningLevel = 0;
+        if (crossDim) {
+            warningLevel = 2; // Severed
+            if (ModConfig.get().cross_dimension_decay && tickCount % 100 == 0) {
+                currentHp = Math.max(1.0f, currentHp - 1.0f);
+                for (ServerPlayer p : players) {
+                    p.sendSystemMessage(Component.literal("§c[Связь нарушена] Разные измерения медленно сжигают общее HP!"), true);
+                }
+            }
+        } else if (maxDist > severDist) {
+            warningLevel = 2;
+            if (tickCount % 60 == 0) {
+                for (ServerPlayer p : players) {
+                    p.addEffect(new MobEffectInstance(MobEffects.HUNGER, 80, 0, true, false, false));
+                    p.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 80, 0, true, false, false));
+                }
+            }
+        } else if (maxDist > warnDist) {
+            warningLevel = 1; // Tension
+        }
+
+        if (tickCount % 20 == 0) {
+            syncTether(warningLevel);
+        }
+    }
+
+    public static void syncAll() {
+        syncTether(0);
+    }
+
+    public static void syncTether(int warningLevel) {
+        if (serverInstance == null) return;
+        List<ServerPlayer> players = serverInstance.getPlayerList().getPlayers();
+        for (ServerPlayer player : players) {
+            Role role = RoleManager.getRole(player.getUUID());
+            String roleName = gameStarted ? role.getDisplayName() : "Ожидание старта (/startad)";
+            ServerPlayNetworking.send(player, new SyncPoolPayload(currentHp, maxHp, roleName, warningLevel));
+        }
+    }
+}
