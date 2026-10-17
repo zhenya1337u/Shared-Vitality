@@ -69,14 +69,14 @@ public class OwoRoleSelectionScreen extends BaseOwoScreen<FlowLayout> {
         );
 
         // 2. MAIN CAROUSEL ROW WITH LEFT / RIGHT ARROWS
-        FlowLayout carouselRow = UIContainers.horizontalFlow(Sizing.fill(98), Sizing.fixed(258));
+        FlowLayout carouselRow = UIContainers.horizontalFlow(Sizing.fill(98), Sizing.fixed(268));
         carouselRow.verticalAlignment(VerticalAlignment.CENTER);
         carouselRow.horizontalAlignment(HorizontalAlignment.CENTER);
 
         // Left Navigation Arrow Button
         ButtonComponent leftBtn = UIComponents.button(Component.literal("◀"), btn -> {
             if (scrollContainer != null) {
-                currentScrollOffset = Math.max(0, currentScrollOffset - 190);
+                currentScrollOffset = Math.max(0, currentScrollOffset - 210);
                 scrollContainer.scrollTo(currentScrollOffset);
             }
         });
@@ -218,8 +218,8 @@ public class OwoRoleSelectionScreen extends BaseOwoScreen<FlowLayout> {
         String localPlayerName = Minecraft.getInstance().player != null ? Minecraft.getInstance().player.getName().getString() : "";
         boolean isTakenByMe = isTaken && takenByPlayer.equalsIgnoreCase(localPlayerName);
 
-        // Outer Card Container (width: 205px, height: 250px)
-        FlowLayout card = UIContainers.verticalFlow(Sizing.fixed(205), Sizing.fixed(250));
+        // Outer Card Container (width: 200px, content-adaptive height, min 250px)
+        FlowLayout card = UIContainers.verticalFlow(Sizing.fixed(200), Sizing.content());
 
         // Neon border and dark glass background
         int borderColor = isTaken ? 0xFF2D3436 : colorHex;
@@ -229,7 +229,7 @@ public class OwoRoleSelectionScreen extends BaseOwoScreen<FlowLayout> {
         card.horizontalAlignment(HorizontalAlignment.CENTER);
 
         // 1. Icon Box at the top (with subtle inner border)
-        FlowLayout iconBox = UIContainers.verticalFlow(Sizing.fixed(188), Sizing.fixed(38));
+        FlowLayout iconBox = UIContainers.verticalFlow(Sizing.fixed(184), Sizing.fixed(38));
         iconBox.surface(Surface.flat(0x991B1A30).and(Surface.outline(0xFF2E2D48)));
         iconBox.horizontalAlignment(HorizontalAlignment.CENTER);
         iconBox.verticalAlignment(VerticalAlignment.CENTER);
@@ -252,14 +252,15 @@ public class OwoRoleSelectionScreen extends BaseOwoScreen<FlowLayout> {
                         .margins(Insets.bottom(4))
         );
 
-        // 3. Pros and Cons list (compact and clean with wrapping support)
-        FlowLayout perksLayout = UIContainers.verticalFlow(Sizing.fill(100), Sizing.fixed(82));
+        // 3. Pros and Cons list (automatic wrapping, adaptive height)
+        FlowLayout perksLayout = UIContainers.verticalFlow(Sizing.fill(100), Sizing.content());
         perksLayout.horizontalAlignment(HorizontalAlignment.LEFT);
+        perksLayout.margins(Insets.bottom(6));
 
         for (String pro : pros) {
             var label = UIComponents.label(Component.literal("§a" + pro))
                     .shadow(true)
-                    .maxWidth(188)
+                    .maxWidth(184)
                     .margins(Insets.vertical(1));
             perksLayout.child(label);
         }
@@ -267,7 +268,7 @@ public class OwoRoleSelectionScreen extends BaseOwoScreen<FlowLayout> {
         for (String con : cons) {
             var label = UIComponents.label(Component.literal("§c" + con))
                     .shadow(true)
-                    .maxWidth(188)
+                    .maxWidth(184)
                     .margins(Insets.vertical(1));
             perksLayout.child(label);
         }
