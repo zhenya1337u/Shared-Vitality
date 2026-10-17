@@ -224,13 +224,8 @@ public class HealthPoolManager {
                 if (player != victim) {
                     player.level().sendParticles(ParticleTypes.DAMAGE_INDICATOR,
                             player.getX(), player.getY() + 1.0, player.getZ(),
-                            3, 0.2, 0.2, 0.2, 0.05);
+                            2, 0.2, 0.2, 0.2, 0.05);
                 }
-
-                float playerMax = player.getMaxHealth();
-                float ratio = (maxHp > 0) ? (currentHp / maxHp) : 0;
-                float playerHealth = Math.max(1.0f, playerMax * ratio);
-                player.setHealth(playerHealth);
             }
 
             if (currentHp <= 0.001f) {

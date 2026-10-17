@@ -71,7 +71,7 @@ public class SharedVitalityHud implements HudElement {
         int currentHearts = (int) Math.ceil(currentHp / 2.0f);
         int maxHearts = (int) Math.ceil(maxHp / 2.0f);
 
-        String hudText = String.format("❤ %d / %d сердец  •  %s", currentHearts, maxHearts, currentRole);
+        String hudText = String.format("❤ ПУЛ: %d / %d сердец  •  %s", currentHearts, maxHearts, currentRole);
         int textWidth = font.width(hudText);
 
         int barWidth = Math.max(textWidth + 16, 120);
