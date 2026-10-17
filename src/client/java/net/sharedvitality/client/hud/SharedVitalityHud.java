@@ -47,34 +47,36 @@ public class SharedVitalityHud implements HudElement {
             extractor.fill(screenWidth - 6, 0, screenWidth, screenHeight, 0xCCFF0000);
         }
 
-        // Bloodlink HUD panel (top-left)
-        int x = 10;
-        int y = 10;
-        int panelWidth = 150;
-        int panelHeight = 36;
+        // Action Bar area HUD (centered above hotbar)
+        // In vanilla Minecraft, hotbar is at screenHeight - 22, health/hunger icons at screenHeight - 39
+        // Action bar messages are at screenHeight - 68
+        int currentHearts = (int) Math.ceil(currentHp / 2.0f);
+        int maxHearts = (int) Math.ceil(maxHp / 2.0f);
 
-        // Background panel
-        extractor.fill(x - 2, y - 2, x + panelWidth + 2, y + panelHeight + 2, 0x90000000);
-        extractor.fill(x - 2, y - 2, x + panelWidth + 2, y, 0xFF8B0000); // Dark red top border
+        String hudText = String.format("❤ %d / %d сердец  •  %s", currentHearts, maxHearts, currentRole);
+        int textWidth = font.width(hudText);
 
-        // Texts
-        String hpText = String.format("Общий пул: %.1f / %.1f HP", currentHp, maxHp);
-        String roleText = "Роль: " + currentRole;
+        int barWidth = Math.max(textWidth + 16, 120);
+        int barHeight = 16;
+        int x = (screenWidth - barWidth) / 2;
+        int y = screenHeight - 65; // Just above the vanilla health/hunger/air bars
 
-        extractor.text(font, hpText, x + 4, y + 4, 0xFF5555);
-        extractor.text(font, roleText, x + 4, y + 14, 0xFFFF55);
+        // Sleek translucent background with dark red border
+        extractor.fill(x - 2, y - 2, x + barWidth + 2, y + barHeight + 2, 0x77000000);
+        extractor.fill(x - 2, y - 2, x + barWidth + 2, y - 1, 0xFF8B0000); // Crimson top accent
 
-        // Health bar
-        int barX = x + 4;
-        int barY = y + 24;
-        int barWidth = panelWidth - 8;
-        int barHeight = 6;
-
+        // Mini HP progress indicator bar at the bottom of the pill
         float ratio = maxHp > 0 ? Math.min(1.0f, Math.max(0.0f, currentHp / maxHp)) : 0.0f;
-        int fillWidth = (int) (barWidth * ratio);
-
-        extractor.fill(barX, barY, barX + barWidth, barY + barHeight, 0xFF333333); // Bar background
+        int miniBarWidth = barWidth;
+        int fillWidth = (int) (miniBarWidth * ratio);
         int barColor = (ratio > 0.5f) ? 0xFF00DD44 : (ratio > 0.25f ? 0xFFFFAA00 : 0xFFFF2222);
-        extractor.fill(barX, barY, barX + fillWidth, barY + barHeight, barColor);
+
+        extractor.fill(x, y + barHeight - 2, x + miniBarWidth, y + barHeight, 0xFF222222);
+        extractor.fill(x, y + barHeight - 2, x + fillWidth, y + barHeight, barColor);
+
+        // Centered text
+        int textX = (screenWidth - textWidth) / 2;
+        int textY = y + 2;
+        extractor.text(font, hudText, textX, textY, 0xFFFFFF);
     }
 }

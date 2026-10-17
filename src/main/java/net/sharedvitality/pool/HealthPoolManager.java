@@ -67,7 +67,7 @@ public class HealthPoolManager {
         List<ServerPlayer> players = server.getPlayerList().getPlayers();
         if (players.isEmpty()) return;
 
-        // Shuffle roles randomly among players
+        // Prepare roles and shuffle
         List<Role> availableRoles = new ArrayList<>(List.of(
                 Role.GUARDIAN, Role.APOTHECARY, Role.DELVER, Role.SCOUT,
                 Role.REAPER, Role.ENCHANTER, Role.MASON, Role.BEASTMASTER,
@@ -75,10 +75,26 @@ public class HealthPoolManager {
         ));
         Collections.shuffle(availableRoles);
 
-        for (int i = 0; i < players.size(); i++) {
-            ServerPlayer player = players.get(i);
-            Role role = (i < availableRoles.size()) ? availableRoles.get(i) : availableRoles.get(i % availableRoles.size());
-            RoleManager.setRole(player.getUUID(), role);
+        // Only assign random roles to players who haven't chosen a role yet
+        List<Role> takenRoles = new ArrayList<>();
+        for (ServerPlayer player : players) {
+            Role current = RoleManager.getRole(player.getUUID());
+            if (current != Role.NONE) {
+                takenRoles.add(current);
+            }
+        }
+        availableRoles.removeAll(takenRoles);
+
+        int randomRoleIndex = 0;
+        for (ServerPlayer player : players) {
+            Role current = RoleManager.getRole(player.getUUID());
+            if (current == Role.NONE) {
+                Role role = (!availableRoles.isEmpty())
+                        ? availableRoles.get(randomRoleIndex % availableRoles.size())
+                        : Role.GUARDIAN;
+                randomRoleIndex++;
+                RoleManager.setRole(player.getUUID(), role);
+            }
             RoleManager.markRoleChosen(player.getUUID()); // lock role so it cannot be changed in menu
             RoleManager.applyRoleModifiers(player);
         }
