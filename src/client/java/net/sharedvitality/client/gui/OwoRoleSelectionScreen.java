@@ -218,8 +218,8 @@ public class OwoRoleSelectionScreen extends BaseOwoScreen<FlowLayout> {
         String localPlayerName = Minecraft.getInstance().player != null ? Minecraft.getInstance().player.getName().getString() : "";
         boolean isTakenByMe = isTaken && takenByPlayer.equalsIgnoreCase(localPlayerName);
 
-        // Outer Card Container (width: 200px, content-adaptive height, min 250px)
-        FlowLayout card = UIContainers.verticalFlow(Sizing.fixed(200), Sizing.content());
+        // Outer Card Container (strictly uniform: width 200px, height 255px)
+        FlowLayout card = UIContainers.verticalFlow(Sizing.fixed(200), Sizing.fixed(255));
 
         // Neon border and dark glass background
         int borderColor = isTaken ? 0xFF2D3436 : colorHex;
@@ -252,9 +252,10 @@ public class OwoRoleSelectionScreen extends BaseOwoScreen<FlowLayout> {
                         .margins(Insets.bottom(4))
         );
 
-        // 3. Pros and Cons list (automatic wrapping, adaptive height)
-        FlowLayout perksLayout = UIContainers.verticalFlow(Sizing.fill(100), Sizing.content());
+        // 3. Pros and Cons list (fixed height 98px so all cards align perfectly, with automatic text wrap)
+        FlowLayout perksLayout = UIContainers.verticalFlow(Sizing.fill(100), Sizing.fixed(98));
         perksLayout.horizontalAlignment(HorizontalAlignment.LEFT);
+        perksLayout.verticalAlignment(VerticalAlignment.TOP);
         perksLayout.margins(Insets.bottom(6));
 
         for (String pro : pros) {
