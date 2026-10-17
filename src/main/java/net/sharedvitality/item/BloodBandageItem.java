@@ -45,6 +45,23 @@ public class BloodBandageItem extends Item {
         return InteractionResult.SUCCESS;
     }
 
+    @Override
+    public InteractionResult interactLivingEntity(ItemStack stack, Player player, net.minecraft.world.entity.LivingEntity interactionTarget, InteractionHand hand) {
+        if (!player.level().isClientSide() && player instanceof net.minecraft.server.level.ServerPlayer serverPlayer && interactionTarget instanceof net.minecraft.server.level.ServerPlayer targetPlayer) {
+            if (net.sharedvitality.compat.HardcoreRevivalCompat.isLoaded() && net.sharedvitality.compat.HardcoreRevivalCompat.isKnockedOut(targetPlayer)) {
+                boolean revived = net.sharedvitality.compat.HardcoreRevivalCompat.reviveWithBandage(serverPlayer, targetPlayer);
+                if (revived) {
+                    if (!player.getAbilities().instabuild) {
+                        stack.shrink(1);
+                    }
+                    player.getCooldowns().addCooldown(stack, 40);
+                    return InteractionResult.SUCCESS;
+                }
+            }
+        }
+        return super.interactLivingEntity(stack, player, interactionTarget, hand);
+    }
+
     public static BloodBandageItem register() {
         return Registry.register(BuiltInRegistries.ITEM, ID, new BloodBandageItem(new Properties()));
     }

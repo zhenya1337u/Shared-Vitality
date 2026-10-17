@@ -33,6 +33,10 @@ dependencies {
 
 	// owo-lib (provided as an external mod)
 	implementation "io.wispforest:owo-lib-26.2:0.13.1+26.2"
+
+	// Hardcore Revival & Balm (optional / compileOnly)
+	compileOnly "net.blay09.mods:balm-fabric:26.2.0.9"
+	compileOnly "net.blay09.mods:hardcorerevival-fabric:26.2.0.6"
 }
 
 // Dynamic git-based versioning
@@ -82,6 +86,14 @@ jar {
 }
 
 tasks.register('copyToMods', Copy) {
+	doFirst {
+		def targetDir = new java.io.File('/home/evgeniy/.local/share/ElyPrismLauncher/instances/26.2/minecraft/mods/')
+		if (targetDir.exists()) {
+			targetDir.listFiles({ dir, name -> name.startsWith('sharedvitality-') && name.endsWith('.jar') } as FilenameFilter).each { oldJar ->
+				oldJar.delete()
+			}
+		}
+	}
 	from jar.archiveFile
 	into '/home/evgeniy/.local/share/ElyPrismLauncher/instances/26.2/minecraft/mods/'
 }

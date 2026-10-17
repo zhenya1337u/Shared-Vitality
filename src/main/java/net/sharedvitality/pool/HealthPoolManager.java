@@ -219,7 +219,22 @@ public class HealthPoolManager {
         syncAll();
     }
 
+    public static void setPoolHealthGrace(float graceHp) {
+        currentHp = graceHp;
+        syncAll();
+    }
+
+    public static void resetPoolAfterWipe() {
+        currentHp = maxHp;
+        syncAll();
+    }
+
     private static void handleTeamDownedOrDeath(ServerPlayer victim, List<ServerPlayer> players) {
+        if (net.sharedvitality.compat.HardcoreRevivalCompat.isLoaded()) {
+            boolean handled = net.sharedvitality.compat.HardcoreRevivalCompat.handlePoolDepleted(victim, players);
+            if (handled) return;
+        }
+
         for (ServerPlayer player : players) {
             if (player.level() instanceof ServerLevel serverLevel) {
                 serverLevel.sendParticles(ParticleTypes.EXPLOSION_EMITTER,
