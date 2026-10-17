@@ -147,6 +147,15 @@ public class SharedVitalityMod implements ModInitializer {
                 }
 
                 Role chosenRole = Role.fromString(payload.roleName());
+                if (chosenRole == Role.NONE) return;
+
+                // Check if role is already taken by another player
+                if (RoleManager.isRoleTaken(chosenRole)) {
+                    player.sendSystemMessage(Component.literal("§c[Кровная связь] Роль «" + chosenRole.getDisplayName() + "» уже занята другим игроком!"));
+                    HealthPoolManager.syncAll();
+                    return;
+                }
+
                 RoleManager.setRole(player.getUUID(), chosenRole);
                 RoleManager.markRoleChosen(player.getUUID()); // lock role permanently
                 RoleManager.applyRoleModifiers(player);
@@ -186,6 +195,16 @@ public class SharedVitalityMod implements ModInitializer {
 
                                         String roleName = StringArgumentType.getString(ctx, "rolename");
                                         Role role = Role.fromString(roleName);
+                                        if (role == Role.NONE) {
+                                            ctx.getSource().sendFailure(Component.literal("§cНеизвестная роль."));
+                                            return 0;
+                                        }
+
+                                        if (RoleManager.isRoleTaken(role) && RoleManager.getRole(player.getUUID()) != role) {
+                                            ctx.getSource().sendFailure(Component.literal("§cРоль «" + role.getDisplayName() + "» уже занята другим игроком!"));
+                                            return 0;
+                                        }
+
                                         RoleManager.setRole(player.getUUID(), role);
                                         RoleManager.markRoleChosen(player.getUUID());
                                         RoleManager.applyRoleModifiers(player);

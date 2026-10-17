@@ -5,8 +5,15 @@ plugins {
 
 repositories {
 	mavenLocal()
-	maven { url 'https://maven.wispforest.io/releases/' }
+	maven {
+		name = "Wisp Forest"
+		url = "https://maven.wispforest.io/releases/"
+	}
 	maven { url 'https://maven.wispforest.io' }
+	maven {
+		name = "TwelveIterations"
+		url = "https://maven.twelveiterations.com/repository/maven-public/"
+	}
 	maven { url 'https://jitpack.io' }
 	maven { url 'https://maven.terraformersmc.com/releases/' }
 	maven { url 'https://maven.nucleoid.xyz/' }
@@ -32,7 +39,7 @@ dependencies {
 	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
 
 	// owo-lib (provided as an external mod)
-	implementation "io.wispforest:owo-lib-26.2:0.13.1+26.2"
+	implementation "io.wispforest:owo-lib:0.13.1+26.2"
 
 	// Hardcore Revival & Balm (optional / compileOnly)
 	compileOnly "net.blay09.mods:balm-fabric:26.2.0.9"

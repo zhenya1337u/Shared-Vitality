@@ -46,6 +46,15 @@ public class RoleManager {
         return CHOSEN_ONCE.contains(uuid);
     }
 
+    public static boolean isRoleTaken(Role role) {
+        if (role == Role.NONE) return false;
+        return PLAYER_ROLES.containsValue(role);
+    }
+
+    public static Role getRoleByPlayer(UUID uuid) {
+        return PLAYER_ROLES.getOrDefault(uuid, Role.NONE);
+    }
+
     public static void markRoleChosen(UUID uuid) {
         CHOSEN_ONCE.add(uuid);
     }
