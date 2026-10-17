@@ -37,10 +37,6 @@ public class HealthPoolManager {
         serverInstance = server;
     }
 
-    public static boolean isGameStarted() {
-        return gameStarted;
-    }
-
     public static void setGameStarted(boolean started) {
         gameStarted = started;
         if (started) {
@@ -52,7 +48,19 @@ public class HealthPoolManager {
                 currentHp = maxHp;
             }
         }
+        saveToConfig(ModConfig.get());
+        ModConfig.save();
         syncAll();
+    }
+
+    public static void saveToConfig(ModConfig config) {
+        config.saved_game_started = gameStarted;
+        config.saved_current_hp = currentHp;
+    }
+
+    public static void loadFromConfig(ModConfig config) {
+        gameStarted = config.saved_game_started;
+        currentHp = config.saved_current_hp > 0 ? config.saved_current_hp : 20.0f;
     }
 
     public static float getCurrentHp() {
@@ -339,11 +347,35 @@ public class HealthPoolManager {
     public static void syncTether(int warningLevel) {
         if (serverInstance == null) return;
         List<ServerPlayer> players = serverInstance.getPlayerList().getPlayers();
+        int total = players.size();
+        int ready = 0;
+
+        // Build simple token string for taken roles: ROLE1:PlayerName,ROLE2:PlayerName
+        StringBuilder takenSb = new StringBuilder();
+        for (Role r : Role.values()) {
+            if (r == Role.NONE) continue;
+            String ownerName = RoleManager.getPlayerNameForRole(r);
+            if (ownerName != null) {
+                if (takenSb.length() > 0) takenSb.append(";");
+                takenSb.append(r.name()).append(":").append(ownerName);
+            }
+        }
+        String takenStr = takenSb.toString();
+
+        for (ServerPlayer player : players) {
+            RoleManager.updatePlayerName(player.getUUID(), player.getName().getString());
+            if (RoleManager.hasChosenRole(player.getUUID())) {
+                ready++;
+            }
+        }
+
         for (ServerPlayer player : players) {
             Role role = RoleManager.getRole(player.getUUID());
             String roleName = gameStarted ? role.getDisplayName() : "Ожидание старта (/startad)";
             boolean chosen = RoleManager.hasChosenRole(player.getUUID());
-            ServerPlayNetworking.send(player, new SyncPoolPayload(currentHp, maxHp, roleName, warningLevel, chosen));
+            ServerPlayNetworking.send(player, new SyncPoolPayload(
+                    currentHp, maxHp, roleName, warningLevel, chosen, ready, total, takenStr
+            ));
         }
     }
 }

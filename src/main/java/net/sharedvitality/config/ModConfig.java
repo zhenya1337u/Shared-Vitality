@@ -19,6 +19,12 @@ public class ModConfig {
     public boolean cross_dimension_decay = true;
     public boolean friendly_fire = false;
 
+    // Persistent game & role state across restarts
+    public boolean saved_game_started = false;
+    public float saved_current_hp = 20.0f;
+    public java.util.Map<String, String> saved_player_roles = new java.util.HashMap<>();
+    public java.util.List<String> saved_chosen_once = new java.util.ArrayList<>();
+
     private static ModConfig INSTANCE = new ModConfig();
 
     public static ModConfig get() {

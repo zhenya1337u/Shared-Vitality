@@ -13,6 +13,7 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.sharedvitality.SharedVitalityMod;
+import net.sharedvitality.config.ModConfig;
 import net.sharedvitality.pool.HealthPoolManager;
 
 import java.util.*;
@@ -55,12 +56,66 @@ public class RoleManager {
         return PLAYER_ROLES.getOrDefault(uuid, Role.NONE);
     }
 
+    public static void saveToConfig(ModConfig config) {
+        config.saved_player_roles.clear();
+        for (Map.Entry<UUID, Role> entry : PLAYER_ROLES.entrySet()) {
+            config.saved_player_roles.put(entry.getKey().toString(), entry.getValue().name());
+        }
+        config.saved_chosen_once.clear();
+        for (UUID uuid : CHOSEN_ONCE) {
+            config.saved_chosen_once.add(uuid.toString());
+        }
+    }
+
+    public static void loadFromConfig(ModConfig config) {
+        PLAYER_ROLES.clear();
+        if (config.saved_player_roles != null) {
+            for (Map.Entry<String, String> entry : config.saved_player_roles.entrySet()) {
+                try {
+                    UUID uuid = UUID.fromString(entry.getKey());
+                    Role role = Role.fromString(entry.getValue());
+                    PLAYER_ROLES.put(uuid, role);
+                } catch (Exception ignored) {}
+            }
+        }
+        CHOSEN_ONCE.clear();
+        if (config.saved_chosen_once != null) {
+            for (String str : config.saved_chosen_once) {
+                try {
+                    CHOSEN_ONCE.add(UUID.fromString(str));
+                } catch (Exception ignored) {}
+            }
+        }
+    }
+
     public static void markRoleChosen(UUID uuid) {
         CHOSEN_ONCE.add(uuid);
+        saveState();
     }
 
     public static void resetRoleChosen(UUID uuid) {
         CHOSEN_ONCE.remove(uuid);
+        saveState();
+    }
+
+    private static void saveState() {
+        saveToConfig(ModConfig.get());
+        ModConfig.save();
+    }
+
+    private static final Map<UUID, String> PLAYER_NAMES = new HashMap<>();
+
+    public static void updatePlayerName(UUID uuid, String name) {
+        PLAYER_NAMES.put(uuid, name);
+    }
+
+    public static String getPlayerNameForRole(Role role) {
+        for (Map.Entry<UUID, Role> entry : PLAYER_ROLES.entrySet()) {
+            if (entry.getValue() == role) {
+                return PLAYER_NAMES.getOrDefault(entry.getKey(), "Игрок");
+            }
+        }
+        return null;
     }
 
     public static Map<UUID, Role> getAllRoles() {

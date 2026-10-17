@@ -56,8 +56,18 @@ public class SharedVitalityMod implements ModInitializer {
         ServerTickEvents.END_SERVER_TICK.register(HealthPoolManager::tick);
 
         // Server lifecycle
-        ServerLifecycleEvents.SERVER_STARTING.register(HealthPoolManager::setServer);
-        ServerLifecycleEvents.SERVER_STOPPING.register(server -> ModConfig.save());
+        ServerLifecycleEvents.SERVER_STARTING.register(server -> {
+            HealthPoolManager.setServer(server);
+            ModConfig.load();
+            RoleManager.loadFromConfig(ModConfig.get());
+            HealthPoolManager.loadFromConfig(ModConfig.get());
+        });
+
+        ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
+            RoleManager.saveToConfig(ModConfig.get());
+            HealthPoolManager.saveToConfig(ModConfig.get());
+            ModConfig.save();
+        });
 
         // Player join & respawn
         ServerPlayerEvents.JOIN.register(player -> {

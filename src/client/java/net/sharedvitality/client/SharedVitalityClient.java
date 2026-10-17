@@ -47,7 +47,10 @@ public class SharedVitalityClient implements ClientModInitializer {
                         payload.maxHp(),
                         payload.roleName(),
                         payload.warningLevel(),
-                        payload.hasChosenRole()
+                        payload.hasChosenRole(),
+                        payload.readyCount(),
+                        payload.totalPlayers(),
+                        payload.takenRolesJson()
                 );
             });
         });

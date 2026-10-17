@@ -12,17 +12,35 @@ public class SharedVitalityHud implements HudElement {
     private static String currentRole = "Нет роли";
     private static int warningLevel = 0;
     private static boolean hasChosenRole = false;
+    private static int readyCount = 0;
+    private static int totalPlayers = 1;
+    private static String takenRolesJson = "";
 
-    public static void updateData(float hp, float max, String role, int warning, boolean chosen) {
+    public static void updateData(float hp, float max, String role, int warning, boolean chosen, int ready, int total, String taken) {
         currentHp = hp;
         maxHp = max;
         currentRole = role;
         warningLevel = warning;
         hasChosenRole = chosen;
+        readyCount = ready;
+        totalPlayers = total;
+        takenRolesJson = taken;
     }
 
     public static boolean hasChosenRole() {
         return hasChosenRole;
+    }
+
+    public static int getReadyCount() {
+        return readyCount;
+    }
+
+    public static int getTotalPlayers() {
+        return totalPlayers;
+    }
+
+    public static String getTakenRolesJson() {
+        return takenRolesJson;
     }
 
     @Override
