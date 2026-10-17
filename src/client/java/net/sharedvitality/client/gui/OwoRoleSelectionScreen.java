@@ -167,7 +167,11 @@ public class OwoRoleSelectionScreen extends BaseOwoScreen<FlowLayout> {
         bottomPill.verticalAlignment(VerticalAlignment.CENTER);
         bottomPill.margins(Insets.top(6));
 
-        String statusText = String.format("§fОТРЯД: §e%d §fИЗ §e%d §fИГРОКОВ СЕРВЕРА  •  §7ОЖИДАНИЕ СТАРТА (/startad)", readyCount, totalPlayers);
+        int currentHearts = (int) Math.ceil(SharedVitalityHud.getCurrentHp() / 2.0f);
+        int maxHearts = (int) Math.ceil(SharedVitalityHud.getMaxHp() / 2.0f);
+
+        String statusText = String.format("§c❤ ПУЛ: §f%d/%d сердец  •  §fОТРЯД: §e%d §fИЗ §e%d  •  §7/startad", 
+                currentHearts, maxHearts, readyCount, totalPlayers);
         bottomPill.child(UIComponents.label(Component.literal(statusText)).shadow(true));
 
         // Yellow status pulse dot

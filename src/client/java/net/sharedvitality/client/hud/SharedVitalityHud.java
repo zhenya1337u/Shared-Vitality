@@ -27,6 +27,14 @@ public class SharedVitalityHud implements HudElement {
         takenRolesJson = taken;
     }
 
+    public static float getCurrentHp() {
+        return currentHp;
+    }
+
+    public static float getMaxHp() {
+        return maxHp;
+    }
+
     public static boolean hasChosenRole() {
         return hasChosenRole;
     }
