@@ -34,11 +34,11 @@ jobs:
       - name: Determine Version
         id: get_version
         run: |
-          MOD_VERSION=$(grep 'version=' gradle.properties | cut -d'=' -f2)
+          MOD_VERSION=$(grep '^version=' gradle.properties | cut -d'=' -f2 | tr -d '\r\n ')
           COMMIT_COUNT=$(git rev-list --count HEAD)
           FULL_VERSION="${MOD_VERSION}.${COMMIT_COUNT}"
-          echo "FULL_VERSION=$FULL_VERSION" >> $GITHUB_OUTPUT
-          echo "Building Shared Vitality version $FULL_VERSION"
+          echo "FULL_VERSION=${FULL_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "Building Shared Vitality version ${FULL_VERSION}"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
