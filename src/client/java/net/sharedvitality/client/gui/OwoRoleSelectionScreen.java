@@ -63,26 +63,15 @@ public class OwoRoleSelectionScreen extends BaseOwoScreen<FlowLayout> {
         );
 
         rootComponent.child(
-                UIComponents.label(Component.literal("§8Листайте список ролей колесом мыши, стрелками или кнопками (10 уникальных архетипов)"))
+                UIComponents.label(Component.literal("§8Листайте список ролей колесиком мыши (10 уникальных архетипов)"))
                         .shadow(true)
                         .margins(Insets.bottom(4))
         );
 
-        // 2. MAIN CAROUSEL ROW WITH LEFT / RIGHT ARROWS
+        // 2. MAIN CAROUSEL ROW (Scroll with mouse wheel / drag)
         FlowLayout carouselRow = UIContainers.horizontalFlow(Sizing.fill(98), Sizing.fixed(268));
         carouselRow.verticalAlignment(VerticalAlignment.CENTER);
         carouselRow.horizontalAlignment(HorizontalAlignment.CENTER);
-
-        // Left Navigation Arrow Button
-        ButtonComponent leftBtn = UIComponents.button(Component.literal("◀"), btn -> {
-            if (scrollContainer != null) {
-                currentScrollOffset = Math.max(0, currentScrollOffset - 210);
-                scrollContainer.scrollTo(currentScrollOffset);
-            }
-        });
-        leftBtn.sizing(Sizing.fixed(24), Sizing.fixed(42));
-        leftBtn.margins(Insets.right(4));
-        carouselRow.child(leftBtn);
 
         // Horizontal roles container
         FlowLayout cardsLayout = UIContainers.horizontalFlow(Sizing.content(), Sizing.fill(100));
@@ -162,20 +151,9 @@ public class OwoRoleSelectionScreen extends BaseOwoScreen<FlowLayout> {
                 playerAlreadyChosen);
 
         // Horizontal Scroll Container
-        scrollContainer = UIContainers.horizontalScroll(Sizing.fill(88), Sizing.fill(100), cardsLayout);
+        scrollContainer = UIContainers.horizontalScroll(Sizing.fill(100), Sizing.fill(100), cardsLayout);
         scrollContainer.scrollbarThiccness(3);
         carouselRow.child(scrollContainer);
-
-        // Right Navigation Arrow Button
-        ButtonComponent rightBtn = UIComponents.button(Component.literal("▶"), btn -> {
-            if (scrollContainer != null) {
-                currentScrollOffset = Math.min(10 * 162, currentScrollOffset + 170);
-                scrollContainer.scrollTo(currentScrollOffset);
-            }
-        });
-        rightBtn.sizing(Sizing.fixed(24), Sizing.fixed(42));
-        rightBtn.margins(Insets.left(4));
-        carouselRow.child(rightBtn);
 
         rootComponent.child(carouselRow);
 

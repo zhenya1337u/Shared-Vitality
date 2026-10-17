@@ -106,28 +106,36 @@ public class SharedVitalityMod implements ModInitializer {
             return true;
         });
 
-        // AttackEntityCallback for Reaper Lifesteal and Shadow Backstab
+        // ServerLivingEntityEvents.AFTER_DAMAGE for Reaper Lifesteal
+        ServerLivingEntityEvents.AFTER_DAMAGE.register((entity, source, baseDamageTaken, damageTaken, blocked) -> {
+            if (entity instanceof LivingEntity && !blocked && damageTaken > 0.0f) {
+                if (source.getEntity() instanceof ServerPlayer serverPlayer) {
+                    Role role = RoleManager.getRole(serverPlayer.getUUID());
+                    // Reaper Lifesteal: every 3 successful critical hits that actually deal damage heals 2 HP into shared pool
+                    if (role == Role.REAPER && serverPlayer.fallDistance > 0.0f && !serverPlayer.onGround()) {
+                        int crits = REAPER_CRIT_COUNTS.getOrDefault(serverPlayer.getUUID(), 0) + 1;
+                        if (crits >= 3) {
+                            crits = 0;
+                            HealthPoolManager.heal(2.0f);
+                            if (serverPlayer.level() instanceof ServerLevel serverLevel) {
+                                serverLevel.sendParticles(ParticleTypes.HEART,
+                                        serverPlayer.getX(), serverPlayer.getY() + 1.2, serverPlayer.getZ(),
+                                        5, 0.3, 0.3, 0.3, 0.1);
+                            }
+                            serverPlayer.sendSystemMessage(Component.literal("§c[Берсерк] Вампиризм сработал! +2 HP в общий пул!"), true);
+                        }
+                        REAPER_CRIT_COUNTS.put(serverPlayer.getUUID(), crits);
+                    }
+                }
+            }
+        });
+
+        // AttackEntityCallback for Shadow Backstab
         AttackEntityCallback.EVENT.register((player, level, hand, target, hitResult) -> {
             if (player instanceof ServerPlayer serverPlayer && target instanceof LivingEntity livingTarget) {
                 Role role = RoleManager.getRole(serverPlayer.getUUID());
 
-                // 1. REAPER Lifesteal (every 3 crits heals 2 HP into shared pool)
-                if (role == Role.REAPER && serverPlayer.fallDistance > 0.0f && !serverPlayer.onGround()) {
-                    int crits = REAPER_CRIT_COUNTS.getOrDefault(serverPlayer.getUUID(), 0) + 1;
-                    if (crits >= 3) {
-                        crits = 0;
-                        HealthPoolManager.heal(2.0f);
-                        if (serverPlayer.level() instanceof ServerLevel serverLevel) {
-                            serverLevel.sendParticles(ParticleTypes.HEART,
-                                    serverPlayer.getX(), serverPlayer.getY() + 1.2, serverPlayer.getZ(),
-                                    5, 0.3, 0.3, 0.3, 0.1);
-                        }
-                        serverPlayer.sendSystemMessage(Component.literal("§c[Жнец] Вампиризм сработал! +2 HP в общий пул!"), true);
-                    }
-                    REAPER_CRIT_COUNTS.put(serverPlayer.getUUID(), crits);
-                }
-
-                // 2. SHADOW Backstab: hit from behind target with sword
+                // SHADOW Backstab: hit from behind target with sword
                 if (role == Role.SHADOW && serverPlayer.getMainHandItem().is(ItemTags.SWORDS)) {
                     Vec3 targetLook = livingTarget.getLookAngle().normalize();
                     Vec3 attackerLook = serverPlayer.getLookAngle().normalize();
