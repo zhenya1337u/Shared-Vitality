@@ -93,8 +93,12 @@ jar {
 }
 
 tasks.register('copyToMods', Copy) {
+	def modsPath = '/home/evgeniy/.local/share/ElyPrismLauncher/instances/26.2/minecraft/mods/'
+	onlyIf {
+		new java.io.File(modsPath).exists()
+	}
 	doFirst {
-		def targetDir = new java.io.File('/home/evgeniy/.local/share/ElyPrismLauncher/instances/26.2/minecraft/mods/')
+		def targetDir = new java.io.File(modsPath)
 		if (targetDir.exists()) {
 			targetDir.listFiles({ dir, name -> name.startsWith('sharedvitality-') && name.endsWith('.jar') } as FilenameFilter).each { oldJar ->
 				oldJar.delete()
@@ -102,7 +106,7 @@ tasks.register('copyToMods', Copy) {
 		}
 	}
 	from jar.archiveFile
-	into '/home/evgeniy/.local/share/ElyPrismLauncher/instances/26.2/minecraft/mods/'
+	into modsPath
 }
 
 assemble.finalizedBy copyToMods
