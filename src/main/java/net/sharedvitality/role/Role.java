@@ -5,7 +5,13 @@ public enum Role {
     GUARDIAN("Guardian", "Страж"),
     APOTHECARY("Apothecary", "Алхимик / Повар"),
     DELVER("Delver", "Геолог"),
-    SCOUT("Scout", "Следопыт");
+    SCOUT("Scout", "Следопыт"),
+    REAPER("Reaper", "Жнец / Берсерк"),
+    ENCHANTER("Enchanter", "Зачарователь / Мистик"),
+    MASON("Mason", "Строитель / Архитектор"),
+    BEASTMASTER("Beastmaster", "Зверолов / Пастух"),
+    SHADOW("Shadow", "Тень / Ассасин"),
+    SOULBINDER("Soulbinder", "Шаман / Врачеватель Душ");
 
     private final String id;
     private final String displayName;

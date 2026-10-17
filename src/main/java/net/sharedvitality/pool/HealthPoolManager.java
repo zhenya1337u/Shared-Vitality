@@ -8,6 +8,8 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.tags.DamageTypeTags;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.sharedvitality.config.ModConfig;
@@ -27,6 +29,10 @@ public class HealthPoolManager {
     private static boolean gameStarted = false;
     private static MinecraftServer serverInstance;
 
+    // Soulbinder spiritual shield cooldown: 10 minutes (12000 ticks)
+    private static int soulbinderShieldCooldown = 0;
+    private static int invulnerabilityTicks = 0;
+
     public static void setServer(MinecraftServer server) {
         serverInstance = server;
     }
@@ -39,6 +45,8 @@ public class HealthPoolManager {
         gameStarted = started;
         if (started) {
             initialized = false;
+            soulbinderShieldCooldown = 0;
+            invulnerabilityTicks = 0;
             if (serverInstance != null) {
                 updatePoolCapacity(serverInstance.getPlayerList().getPlayers());
                 currentHp = maxHp;
@@ -60,13 +68,18 @@ public class HealthPoolManager {
         if (players.isEmpty()) return;
 
         // Shuffle roles randomly among players
-        List<Role> availableRoles = new ArrayList<>(List.of(Role.GUARDIAN, Role.APOTHECARY, Role.DELVER, Role.SCOUT));
+        List<Role> availableRoles = new ArrayList<>(List.of(
+                Role.GUARDIAN, Role.APOTHECARY, Role.DELVER, Role.SCOUT,
+                Role.REAPER, Role.ENCHANTER, Role.MASON, Role.BEASTMASTER,
+                Role.SHADOW, Role.SOULBINDER
+        ));
         Collections.shuffle(availableRoles);
 
         for (int i = 0; i < players.size(); i++) {
             ServerPlayer player = players.get(i);
             Role role = (i < availableRoles.size()) ? availableRoles.get(i) : availableRoles.get(i % availableRoles.size());
             RoleManager.setRole(player.getUUID(), role);
+            RoleManager.markRoleChosen(player.getUUID()); // lock role so it cannot be changed in menu
             RoleManager.applyRoleModifiers(player);
         }
 
@@ -103,6 +116,8 @@ public class HealthPoolManager {
                 calculatedMax += 10.0f;
             } else if (role == Role.SCOUT) {
                 calculatedMax = Math.max(1.0f, calculatedMax - 4.0f);
+            } else if (role == Role.SHADOW) {
+                calculatedMax = Math.max(1.0f, calculatedMax - 6.0f);
             }
         }
 
@@ -121,8 +136,9 @@ public class HealthPoolManager {
         syncAll();
     }
 
-    public static void onPlayerDamage(ServerPlayer victim, float amount) {
+    public static void onPlayerDamage(ServerPlayer victim, DamageSource source, float amount) {
         if (!gameStarted || isDistributingDamage || serverInstance == null) return;
+        if (invulnerabilityTicks > 0) return; // Team is invulnerable from Soulbinder shield
 
         List<ServerPlayer> players = serverInstance.getPlayerList().getPlayers();
         if (players.isEmpty()) return;
@@ -134,12 +150,46 @@ public class HealthPoolManager {
             amount *= 0.5f;
         }
 
+        // Enchanter: direct explosive damage loses 25% more pool HP
+        if (victimRole == Role.ENCHANTER && source.is(DamageTypeTags.IS_EXPLOSION)) {
+            amount *= 1.25f;
+        }
+
+        // Check if lethal hit and team has Soulbinder with ready Spiritual Shield
+        if (currentHp - amount <= 0.001f) {
+            boolean hasSoulbinder = false;
+            for (ServerPlayer p : players) {
+                if (RoleManager.getRole(p.getUUID()) == Role.SOULBINDER) {
+                    hasSoulbinder = true;
+                    break;
+                }
+            }
+            if (hasSoulbinder && soulbinderShieldCooldown <= 0) {
+                // Soulbinder saves the team!
+                currentHp = 1.0f;
+                invulnerabilityTicks = 100; // 5 seconds of total invulnerability
+                soulbinderShieldCooldown = 12000; // 10 minutes cooldown
+
+                for (ServerPlayer p : players) {
+                    p.connection.send(new net.minecraft.network.protocol.game.ClientboundSoundPacket(
+                            net.minecraft.core.registries.BuiltInRegistries.SOUND_EVENT.wrapAsHolder(SoundEvents.TOTEM_USE),
+                            SoundSource.PLAYERS,
+                            p.getX(), p.getY(), p.getZ(),
+                            1.0f, 1.0f, p.getRandom().nextLong()
+                    ));
+                    p.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 100, 1, true, false, false));
+                    p.sendSystemMessage(Component.literal("§d✨ [ДУХОВНЫЙ ЩИТ ШАМАНА] Смертельный удар поглощен! 5 секунд неуязвимости!"));
+                }
+                syncAll();
+                return;
+            }
+        }
+
         isDistributingDamage = true;
         try {
             currentHp = Math.max(0.0f, currentHp - amount);
 
             for (ServerPlayer player : players) {
-                // Audio heartbeat cue
                 player.connection.send(new net.minecraft.network.protocol.game.ClientboundSoundPacket(
                         net.minecraft.core.registries.BuiltInRegistries.SOUND_EVENT.wrapAsHolder(SoundEvents.WARDEN_HEARTBEAT),
                         SoundSource.PLAYERS,
@@ -153,7 +203,6 @@ public class HealthPoolManager {
                             3, 0.2, 0.2, 0.2, 0.05);
                 }
 
-                // Synchronize player entity actual health to proportional value
                 float playerMax = player.getMaxHealth();
                 float ratio = (maxHp > 0) ? (currentHp / maxHp) : 0;
                 float playerHealth = Math.max(1.0f, playerMax * ratio);
@@ -191,8 +240,16 @@ public class HealthPoolManager {
 
         updatePoolCapacity(players);
 
-        // Natural slow regen if not severed
         int tickCount = server.getTickCount();
+
+        if (soulbinderShieldCooldown > 0) {
+            soulbinderShieldCooldown--;
+        }
+        if (invulnerabilityTicks > 0) {
+            invulnerabilityTicks--;
+        }
+
+        // Natural slow regen if not severed
         if (tickCount % 40 == 0 && currentHp < maxHp) {
             heal(0.5f);
         }
@@ -254,7 +311,8 @@ public class HealthPoolManager {
         for (ServerPlayer player : players) {
             Role role = RoleManager.getRole(player.getUUID());
             String roleName = gameStarted ? role.getDisplayName() : "Ожидание старта (/startad)";
-            ServerPlayNetworking.send(player, new SyncPoolPayload(currentHp, maxHp, roleName, warningLevel));
+            boolean chosen = RoleManager.hasChosenRole(player.getUUID());
+            ServerPlayNetworking.send(player, new SyncPoolPayload(currentHp, maxHp, roleName, warningLevel, chosen));
         }
     }
 }

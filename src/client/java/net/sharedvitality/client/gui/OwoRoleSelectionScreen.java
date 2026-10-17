@@ -3,12 +3,14 @@ package net.sharedvitality.client.gui;
 import io.wispforest.owo.ui.base.BaseOwoScreen;
 import io.wispforest.owo.ui.component.UIComponents;
 import io.wispforest.owo.ui.container.FlowLayout;
+import io.wispforest.owo.ui.container.ScrollContainer;
 import io.wispforest.owo.ui.container.UIContainers;
 import io.wispforest.owo.ui.core.*;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.sharedvitality.client.hud.SharedVitalityHud;
 import net.sharedvitality.network.SelectRolePayload;
 import net.sharedvitality.role.Role;
 import org.jetbrains.annotations.NotNull;
@@ -33,54 +35,121 @@ public class OwoRoleSelectionScreen extends BaseOwoScreen<FlowLayout> {
         rootComponent.horizontalAlignment(HorizontalAlignment.CENTER);
 
         // Main modal dialog container
-        FlowLayout dialog = UIContainers.verticalFlow(Sizing.fixed(320), Sizing.content());
+        FlowLayout dialog = UIContainers.verticalFlow(Sizing.fixed(340), Sizing.fixed(230));
         dialog.surface(Surface.PANEL.and(Surface.outline(0xFF8B0000)));
-        dialog.padding(Insets.of(12));
+        dialog.padding(Insets.of(10));
         dialog.horizontalAlignment(HorizontalAlignment.CENTER);
 
         // Header Title
         dialog.child(
                 UIComponents.label(Component.literal("§4⚔ §cКРОВНАЯ СВЯЗЬ §4⚔"))
                         .shadow(true)
-                        .margins(Insets.bottom(4))
+                        .margins(Insets.bottom(2))
         );
+
+        boolean alreadyChosen = SharedVitalityHud.hasChosenRole();
+        String subtitle = alreadyChosen
+                ? "§cВыбор заблокирован: вы уже выбрали роль!"
+                : "§7Выберите архетип (роль выбирается только 1 раз):";
 
         dialog.child(
-                UIComponents.label(Component.literal("§7Выберите архетип для своей группы:"))
+                UIComponents.label(Component.literal(subtitle))
                         .shadow(true)
-                        .margins(Insets.bottom(10))
+                        .margins(Insets.bottom(6))
         );
 
-        // Role Cards list
-        addRoleCard(dialog, Role.GUARDIAN, new ItemStack(Items.SHIELD),
+        // Scrollable list of all 10 roles
+        FlowLayout rolesList = UIContainers.verticalFlow(Sizing.fill(100), Sizing.content());
+        rolesList.padding(Insets.right(4));
+
+        // 1. Жнец / Берсерк (Reaper)
+        addRoleCard(rolesList, Role.REAPER, new ItemStack(Items.NETHERITE_SWORD),
+                "§cЖнец / Берсерк (Reaper)",
+                "§aУрон растет при низком пуле команды (<30%: Сила II + Скорость I).\n" +
+                "§aВампиризм: каждый 3-й критический удар лечит +2 HP в общий пул!\n" +
+                "§cЕда восполняет только голод (не лечит напрямую).\n" +
+                "§cДлительность горения в огне/лаве увеличена на 50%.", alreadyChosen);
+
+        // 2. Зачарователь / Мистик (Enchanter)
+        addRoleCard(rolesList, Role.ENCHANTER, new ItemStack(Items.ENCHANTED_BOOK),
+                "§9Зачарователь / Мистик (Enchanter)",
+                "§a+50% сфер опыта, опыт автоматически делится с союзниками (32 бл).\n" +
+                "§aКнижная аура (8 бл): усиливает союзников стихийной защитой.\n" +
+                "§cБазовый запас брони снижен на 30%.\n" +
+                "§cВзрывной урон (крипер/ТНТ) отнимает на 25% больше HP пула.", alreadyChosen);
+
+        // 3. Строитель / Архитектор (Mason)
+        addRoleCard(rolesList, Role.MASON, new ItemStack(Items.BRICKS),
+                "§6Строитель / Архитектор (Mason)",
+                "§a+2 блока к дальности установки и разрушения.\n" +
+                "§aКаменная цитадель: аура Стойкости I (Resistance I) союзникам на базе (16 бл от верстака).\n" +
+                "§cПлывёт в воде на 40% медленнее.\n" +
+                "§cВне базы шкала голода тратится на 20% быстрее.", alreadyChosen);
+
+        // 4. Зверолов / Пастух (Beastmaster)
+        addRoleCard(rolesList, Role.BEASTMASTER, new ItemStack(Items.BONE),
+                "§2Зверолов / Пастух (Beastmaster)",
+                "§aПрирученные животные получают x2 HP и скорость.\n" +
+                "§aНейтральные мобы (големы, пчёлы, свинозомби) не атакуют первыми.\n" +
+                "§cВ пещерах без неба получает дебафф замедления атаки.", alreadyChosen);
+
+        // 5. Тень / Ассасин (Shadow)
+        addRoleCard(rolesList, Role.SHADOW, new ItemStack(Items.ENDER_EYE),
+                "§8Тень / Ассасин (Shadow)",
+                "§aНевидимость для монстров при ходьбе на шифте (радиус 2 бл).\n" +
+                "§aУдар в спину: гарантированный крит и оглушение цели на 1.5 сек.\n" +
+                "§cСнижает общий пул команды на 6 HP.\n" +
+                "§cЗапрет на использование щитов.", alreadyChosen);
+
+        // 6. Шаман / Врачеватель Душ (Soulbinder)
+        addRoleCard(rolesList, Role.SOULBINDER, new ItemStack(Items.TOTEM_OF_UNDYING),
+                "§5Шаман / Врачеватель (Soulbinder)",
+                "§aДуховный щит: летальный удар блокируется на 1 HP + 5 сек неуязвимости команде (кд 10 мин)!\n" +
+                "§cНаносит на 30% меньше урона оружием.\n" +
+                "§cАура: вокруг Шамана чаще спавнятся фантомы.", alreadyChosen);
+
+        // 7. Страж (Guardian)
+        addRoleCard(rolesList, Role.GUARDIAN, new ItemStack(Items.SHIELD),
                 "§6Страж (Guardian)",
-                "§a+10 к общему пулу HP, блок 50% урона щитом, стойкость к отталкиванию.\n§cРасход шкалы голода на 25% быстрее.");
+                "§a+10 к пулу HP, блок 50% урона щитом за команду, стойкость к отталкиванию.\n" +
+                "§cРасход шкалы голода на 25% быстрее.", alreadyChosen);
 
-        addRoleCard(dialog, Role.APOTHECARY, new ItemStack(Items.POTION),
+        // 8. Алхимик / Повар (Apothecary)
+        addRoleCard(rolesList, Role.APOTHECARY, new ItemStack(Items.POTION),
                 "§dАлхимик / Повар (Apothecary)",
-                "§aБинты и еда восстанавливают на 30-60% больше здоровья и сытости.\n§cНаносит на 40% меньше физического урона.");
+                "§aКровавые бинты восстанавливают 8 HP вместо 5 HP.\n" +
+                "§cНаносит на 40% меньше физического урона оружием.", alreadyChosen);
 
-        addRoleCard(dialog, Role.DELVER, new ItemStack(Items.IRON_PICKAXE),
+        // 9. Геолог (Delver)
+        addRoleCard(rolesList, Role.DELVER, new ItemStack(Items.IRON_PICKAXE),
                 "§eГеолог (Delver)",
-                "§aПостоянная Спешка (Haste I) под землей (Y < 50), удача при добыче.\n§cСлабость (Weakness I) под открытым небом днем.");
+                "§aПостоянная Спешка (Haste I) под землей (Y < 50).\n" +
+                "§cСлабость (Weakness I) под открытым небом в солнечный день.", alreadyChosen);
 
-        addRoleCard(dialog, Role.SCOUT, new ItemStack(Items.BOW),
+        // 10. Следопыт (Scout)
+        addRoleCard(rolesList, Role.SCOUT, new ItemStack(Items.BOW),
                 "§bСледопыт (Scout)",
-                "§a+15% скорость бега, увеличенный прыжок, урон лука на дистанции.\n§c-4 HP от пула команды, запрет тяжелой брони.");
+                "§a+15% скорость бега, повышенная дальность прыжка.\n" +
+                "§c-4 HP от пула команды, запрет тяжелой брони (алмаз/незерит).", alreadyChosen);
+
+        ScrollContainer<FlowLayout> scroll = UIContainers.verticalScroll(
+                Sizing.fill(100), Sizing.fixed(150), rolesList);
+
+        dialog.child(scroll);
 
         // Close button
         dialog.child(
                 UIComponents.button(Component.literal("Закрыть"), btn -> this.onClose())
-                        .margins(Insets.top(8))
+                        .margins(Insets.top(6))
         );
 
         rootComponent.child(dialog);
     }
 
-    private void addRoleCard(FlowLayout container, Role role, ItemStack iconItem, String title, String description) {
-        FlowLayout card = UIContainers.horizontalFlow(Sizing.fill(100), Sizing.fixed(36));
+    private void addRoleCard(FlowLayout container, Role role, ItemStack iconItem, String title, String description, boolean disabled) {
+        FlowLayout card = UIContainers.horizontalFlow(Sizing.fill(100), Sizing.fixed(32));
         card.surface(Surface.PANEL_INSET);
-        card.padding(Insets.of(4));
+        card.padding(Insets.of(3));
         card.margins(Insets.vertical(2));
         card.verticalAlignment(VerticalAlignment.CENTER);
 
@@ -88,7 +157,7 @@ public class OwoRoleSelectionScreen extends BaseOwoScreen<FlowLayout> {
         card.child(UIComponents.item(iconItem).margins(Insets.right(6)));
 
         // Title and description flow
-        FlowLayout textLayout = UIContainers.verticalFlow(Sizing.fill(60), Sizing.content());
+        FlowLayout textLayout = UIContainers.verticalFlow(Sizing.fill(58), Sizing.content());
         textLayout.verticalAlignment(VerticalAlignment.CENTER);
         textLayout.child(UIComponents.label(Component.literal(title)).shadow(true));
         card.child(textLayout);
@@ -100,13 +169,18 @@ public class OwoRoleSelectionScreen extends BaseOwoScreen<FlowLayout> {
         ));
 
         // Select button
-        card.child(
-                UIComponents.button(Component.literal("Выбрать"), btn -> {
-                    ClientPlayNetworking.send(new SelectRolePayload(role.name()));
-                    this.onClose();
-                }).margins(Insets.left(4))
-        );
+        var btn = UIComponents.button(Component.literal(disabled ? "Выбрано" : "Выбрать"), button -> {
+            if (!disabled) {
+                ClientPlayNetworking.send(new SelectRolePayload(role.name()));
+                this.onClose();
+            }
+        });
+        btn.margins(Insets.left(4));
+        if (disabled) {
+            btn.active = false;
+        }
 
+        card.child(btn);
         container.child(card);
     }
 }

@@ -11,12 +11,18 @@ public class SharedVitalityHud implements HudElement {
     private static float maxHp = 20.0f;
     private static String currentRole = "Нет роли";
     private static int warningLevel = 0;
+    private static boolean hasChosenRole = false;
 
-    public static void updateData(float hp, float max, String role, int warning) {
+    public static void updateData(float hp, float max, String role, int warning, boolean chosen) {
         currentHp = hp;
         maxHp = max;
         currentRole = role;
         warningLevel = warning;
+        hasChosenRole = chosen;
+    }
+
+    public static boolean hasChosenRole() {
+        return hasChosenRole;
     }
 
     @Override
@@ -44,7 +50,7 @@ public class SharedVitalityHud implements HudElement {
         // Bloodlink HUD panel (top-left)
         int x = 10;
         int y = 10;
-        int panelWidth = 140;
+        int panelWidth = 150;
         int panelHeight = 36;
 
         // Background panel

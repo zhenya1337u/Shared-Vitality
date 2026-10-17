@@ -7,7 +7,7 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
 import net.sharedvitality.SharedVitalityMod;
 
-public record SyncPoolPayload(float currentHp, float maxHp, String roleName, int warningLevel) implements CustomPacketPayload {
+public record SyncPoolPayload(float currentHp, float maxHp, String roleName, int warningLevel, boolean hasChosenRole) implements CustomPacketPayload {
     public static final Type<SyncPoolPayload> TYPE = new Type<>(Identifier.fromNamespaceAndPath(SharedVitalityMod.MOD_ID, "sync_pool"));
 
     public static final StreamCodec<ByteBuf, SyncPoolPayload> CODEC = StreamCodec.composite(
@@ -15,6 +15,7 @@ public record SyncPoolPayload(float currentHp, float maxHp, String roleName, int
             ByteBufCodecs.FLOAT, SyncPoolPayload::maxHp,
             ByteBufCodecs.STRING_UTF8, SyncPoolPayload::roleName,
             ByteBufCodecs.INT, SyncPoolPayload::warningLevel,
+            ByteBufCodecs.BOOL, SyncPoolPayload::hasChosenRole,
             SyncPoolPayload::new
     );
 
