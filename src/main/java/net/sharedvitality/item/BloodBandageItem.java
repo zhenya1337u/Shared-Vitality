@@ -35,7 +35,7 @@ public class BloodBandageItem extends Item {
 
             HealthPoolManager.heal(healAmount);
             level.playSound(null, player.getX(), player.getY(), player.getZ(),
-                    SoundEvents.WARDEN_HEARTBEAT, SoundSource.PLAYERS, 1.0f, 1.2f);
+                    SharedVitalityMod.HEARTBEAT, SoundSource.PLAYERS, 1.0f, 1.0f);
 
             if (!player.getAbilities().instabuild) {
                 itemStack.shrink(1);

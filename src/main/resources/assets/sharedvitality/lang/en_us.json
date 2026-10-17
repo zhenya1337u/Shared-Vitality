@@ -11,5 +11,6 @@
   "role.sharedvitality.mason": "Builder",
   "role.sharedvitality.beastmaster": "Tamer",
   "role.sharedvitality.shadow": "Assassin",
-  "role.sharedvitality.soulbinder": "Shaman"
+  "role.sharedvitality.soulbinder": "Shaman",
+  "subtitles.sharedvitality.heartbeat": "Heartbeat"
 }

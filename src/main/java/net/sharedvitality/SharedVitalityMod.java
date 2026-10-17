@@ -21,6 +21,7 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.resources.Identifier;
 import net.sharedvitality.config.ModConfig;
 import net.sharedvitality.item.BloodBandageItem;
 import net.sharedvitality.network.SelectRolePayload;
@@ -38,6 +39,13 @@ import java.util.UUID;
 public class SharedVitalityMod implements ModInitializer {
     public static final String MOD_ID = "sharedvitality";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
+
+    public static final Identifier HEARTBEAT_ID = Identifier.fromNamespaceAndPath(MOD_ID, "heartbeat");
+    public static final net.minecraft.sounds.SoundEvent HEARTBEAT = net.minecraft.core.Registry.register(
+            net.minecraft.core.registries.BuiltInRegistries.SOUND_EVENT,
+            HEARTBEAT_ID,
+            net.minecraft.sounds.SoundEvent.createVariableRangeEvent(HEARTBEAT_ID)
+    );
 
     private static final Map<UUID, Integer> REAPER_CRIT_COUNTS = new HashMap<>();
 

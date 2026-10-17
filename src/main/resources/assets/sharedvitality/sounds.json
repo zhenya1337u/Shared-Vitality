@@ -1,0 +1,8 @@
+{
+  "heartbeat": {
+    "subtitle": "subtitles.sharedvitality.heartbeat",
+    "sounds": [
+      "sharedvitality:heartbeat"
+    ]
+  }
+}

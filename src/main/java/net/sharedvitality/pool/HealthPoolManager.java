@@ -215,10 +215,10 @@ public class HealthPoolManager {
 
             for (ServerPlayer player : players) {
                 player.connection.send(new net.minecraft.network.protocol.game.ClientboundSoundPacket(
-                        net.minecraft.core.registries.BuiltInRegistries.SOUND_EVENT.wrapAsHolder(SoundEvents.WARDEN_HEARTBEAT),
+                        net.minecraft.core.registries.BuiltInRegistries.SOUND_EVENT.wrapAsHolder(net.sharedvitality.SharedVitalityMod.HEARTBEAT),
                         SoundSource.PLAYERS,
                         player.getX(), player.getY(), player.getZ(),
-                        0.8f, 1.0f, player.getRandom().nextLong()
+                        1.0f, 1.0f, player.getRandom().nextLong()
                 ));
 
                 if (player != victim) {
