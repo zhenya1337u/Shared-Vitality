@@ -1,0 +1,53 @@
+name: Build and Release Mod
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '25'
+
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+
+      - name: Build Mod with Gradle
+        run: ./gradlew build --no-daemon
+
+      - name: Determine Version
+        id: get_version
+        run: |
+          MOD_VERSION=$(grep 'version=' gradle.properties | cut -d'=' -f2)
+          COMMIT_COUNT=$(git rev-list --count HEAD)
+          FULL_VERSION="${MOD_VERSION}.${COMMIT_COUNT}"
+          echo "FULL_VERSION=$FULL_VERSION" >> $GITHUB_OUTPUT
+          echo "Building Shared Vitality version $FULL_VERSION"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main'
+        with:
+          tag_name: v${{ steps.get_version.outputs.FULL_VERSION }}
+          name: Shared Vitality v${{ steps.get_version.outputs.FULL_VERSION }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          files: |
+            build/libs/sharedvitality-*.jar
