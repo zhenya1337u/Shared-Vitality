@@ -52,7 +52,7 @@ public class HardcoreRevivalCompat {
             long activePlayers = players.stream().filter(p -> !HardcoreRevivalAPI.isKnockedOut(p)).count();
 
             if (activePlayers == 0) {
-                // Total squad wipe!
+                // All players fell into knockout and died, respawning with full team pool!
                 for (ServerPlayer player : players) {
                     if (player.level() instanceof ServerLevel serverLevel) {
                         serverLevel.sendParticles(ParticleTypes.EXPLOSION_EMITTER,
@@ -60,7 +60,7 @@ public class HardcoreRevivalCompat {
                                 1, 0, 0, 0, 0);
                     }
                     player.kill(player.level());
-                    player.sendSystemMessage(Component.literal("§c☠ [Кровная связь] Весь отряд пал в бою! Игру окончено."));
+                    player.sendSystemMessage(Component.literal("§c☠ [Кровная связь] Весь отряд погиб! Вы возродитесь со своими ролями."));
                 }
                 HealthPoolManager.resetPoolAfterWipe();
                 return true;
